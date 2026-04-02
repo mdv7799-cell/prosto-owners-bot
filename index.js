@@ -97,12 +97,17 @@ bot.on('text', async (ctx) => {
   }
 
   // ціна
-  if (user.step === 'price') {
-    user.price = text;
-    user.step = 'phone';
+ if (user.step === 'price') {
+  user.price = text;
+  user.step = 'phone';
 
-    return ctx.reply('Вкажіть телефон');
-  }
+  return ctx.reply(
+    'Натисніть кнопку, щоб надіслати номер',
+    Markup.keyboard([
+      [Markup.button.contactRequest('📞 Надіслати номер')]
+    ]).resize()
+  );
+}
 
   // телефон
   if (user.step === 'phone') {
