@@ -61,6 +61,11 @@ bot.hears(['Квартира', 'Будинок', 'Земля', 'Комерція
 // крок кімнати
 bot.hears(['1к', '2к', '3к', '4+'], (ctx) => {
   const user = sessions[ctx.from.id];
+
+  if (!user) {
+    return ctx.reply('Натисніть /start');
+  }
+
   if (user.step !== 'rooms') return;
 
   user.rooms = ctx.message.text;
