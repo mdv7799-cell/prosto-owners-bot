@@ -10,8 +10,17 @@ const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || 'prosto_secret_123';
 const PUBLIC_URL = process.env.PUBLIC_URL;
 const MANAGER_CHAT_ID = process.env.MANAGER_CHAT_ID;
 
-// зберігання сесії (просто в памʼяті)
 const sessions = {};
+
+// райони Дніпра
+const districts = [
+  ['Центр', 'Тополя'],
+  ['Перемога', 'Сокіл'],
+  ['Клочко', 'Лівобережний'],
+  ['Парус', 'Червоний Камінь'],
+  ['Придніпровськ', 'Самар'],
+  ['Індустріальний', 'Амур-Нижньодніпровський']
+];
 
 // старт
 bot.start((ctx) => {
@@ -34,53 +43,73 @@ bot.hears(['Продати', 'Здати в оренду'], (ctx) => {
 
 // крок 2
 bot.hears(['Квартира', 'Будинок', 'Земля', 'Комерція'], (ctx) => {
-  sessions[ctx.from.id].type = ctx.message.text;
+  const user = sessions[ctx.from.id];
+  user.type = ctx.message.text;
 
-  if (ctx.message.text === 'Квартира') {
-    ctx.reply('Скільки кімнат?', Markup.keyboard([
+  if (user.type === 'Квартира') {
+    user.step = 'rooms';
+
+    return ctx.reply('Скільки кімнат?', Markup.keyboard([
       ['1к', '2к'],
       ['3к', '4+']
     ]).resize());
-  } else {
-    ctx.reply('Вкажіть площу (м²)');
   }
+
+  user.step = 'area';
+  ctx.reply('Вкажіть площу (м²)');
 });
 
-// крок 3 (кімнати)
+// крок кімнати
 bot.hears(['1к', '2к', '3к', '4+'], (ctx) => {
-  sessions[ctx.from.id].rooms = ctx.message.text;
-  ctx.reply('Вкажіть район');
+  const user = sessions[ctx.from.id];
+  if (user.step !== 'rooms') return;
+
+  user.rooms = ctx.message.text;
+  user.step = 'district';
+
+  ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
 });
 
-// крок 3 (площа)
+// універсальний обробник
 bot.on('text', async (ctx) => {
   const user = sessions[ctx.from.id];
   if (!user) return;
 
-  if (!user.rooms && user.type !== 'Квартира' && !user.area) {
-    user.area = ctx.message.text;
-    return ctx.reply('Вкажіть район');
+  const text = ctx.message.text;
+
+  // площа
+  if (user.step === 'area') {
+    user.area = text;
+    user.step = 'district';
+
+    return ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
   }
 
-  if (!user.district) {
-    user.district = ctx.message.text;
+  // район
+  if (user.step === 'district') {
+    user.district = text;
+    user.step = 'price';
 
     if (user.action === 'Здати в оренду') {
-      return ctx.reply('Вкажіть бажану ціну (грн/міс)');
+      return ctx.reply('Вкажіть ціну (грн/міс)');
     } else {
-      return ctx.reply('Вкажіть бажану ціну ($)');
+      return ctx.reply('Вкажіть ціну ($)');
     }
   }
 
-  if (!user.price) {
-    user.price = ctx.message.text;
-    return ctx.reply('Вкажіть ваш телефон');
+  // ціна
+  if (user.step === 'price') {
+    user.price = text;
+    user.step = 'phone';
+
+    return ctx.reply('Вкажіть телефон');
   }
 
-  if (!user.phone) {
-    user.phone = ctx.message.text;
+  // телефон
+  if (user.step === 'phone') {
+    user.phone = text;
 
-    const text = `
+    const message = `
 🔔 Нова заявка
 
 Тип: ${user.action}
@@ -91,9 +120,9 @@ ${user.rooms ? `Кімнати: ${user.rooms}` : `Площа: ${user.area} м²`
 Телефон: ${user.phone}
 `;
 
-    await bot.telegram.sendMessage(MANAGER_CHAT_ID, text);
+    await bot.telegram.sendMessage(MANAGER_CHAT_ID, message);
 
-    ctx.reply('Дякуємо! Ми звʼяжемось з вами 👍');
+    ctx.reply('Дякуємо! Ми звʼяжемось 👍');
 
     delete sessions[ctx.from.id];
   }
