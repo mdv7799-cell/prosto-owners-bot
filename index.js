@@ -77,7 +77,10 @@ bot.hears(['1к', '2к', '3к', '4+'], (ctx) => {
 // універсальний обробник
 bot.on('text', async (ctx) => {
   const user = sessions[ctx.from.id];
-  if (!user) return;
+
+  if (!user) {
+    return ctx.reply('Натисніть /start');
+  }
 
   const text = ctx.message.text;
 
