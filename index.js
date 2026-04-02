@@ -23,7 +23,7 @@ const districts = [
 
 // старт
 bot.start((ctx) => {
-  sessions[ctx.from.id] = {};
+  sessions[ctx.from.id] = { step: 'action' };
 
   ctx.reply('Що хочете зробити?', Markup.keyboard([
     ['Продати', 'Здати в оренду']
