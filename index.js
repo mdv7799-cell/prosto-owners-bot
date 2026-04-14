@@ -22,12 +22,10 @@ const districts = [
 ];
 
 bot.start((ctx) => {
-  sessions[ctx.from.id] = {
-    step: 'action'
-  };
+  sessions[ctx.from.id] = { step: 'action' };
 
-  ctx.reply(
-  '👋 Вітаємо в PROSTO Нерухомість!\n\nДопоможемо швидко та безпечно продати або здати вашу нерухомість.\n\nБажаєте продати чи здати?',
+  return ctx.reply(
+    '👋 Вітаємо в PROSTO Нерухомість!\n\nБажаєте продати чи здати в оренду нерухомість?',
     Markup.keyboard([
       ['Продати', 'Здати в оренду']
     ]).resize()
@@ -40,7 +38,9 @@ bot.start((ctx) => {
 });
 
 bot.on('text', async (ctx) => {
-
+if (!sessions[ctx.from.id]) {
+  return ctx.reply('Натисніть /start');
+}
   if (!sessions[ctx.from.id]) {
     sessions[ctx.from.id] = { step: 'action' };
 
