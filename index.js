@@ -21,6 +21,7 @@ const districts = [
   ['Дніпровський район (передмістя)']
 ];
 
+// старт
 bot.start((ctx) => {
   sessions[ctx.from.id] = { step: 'action' };
 
@@ -32,32 +33,18 @@ bot.start((ctx) => {
   );
 });
 
-  ctx.reply('Що хочете зробити?', Markup.keyboard([
-    ['Продати', 'Здати в оренду']
-  ]).resize());
-});
-
+// основна логіка
 bot.on('text', async (ctx) => {
-if (!sessions[ctx.from.id]) {
-  return ctx.reply('Натисніть /start');
-}
-  if (!sessions[ctx.from.id]) {
-    sessions[ctx.from.id] = { step: 'action' };
-
-    return ctx.reply(
-      '👋 Вітаємо в PROSTO Нерухомість!\n\nДопоможемо швидко та безпечно продати або здати вашу нерухомість.\n\nБажаєте продати чи здати?',
-      Markup.keyboard([
-        ['Продати', 'Здати в оренду']
-      ]).resize()
-    );
-  }
-
   const userId = ctx.from.id;
   const text = ctx.message.text;
 
+  if (!sessions[userId]) {
+    return ctx.reply('Натисніть /start');
+  }
+
   const user = sessions[userId];
 
-  // 1. дія
+  // дія
   if (user.step === 'action') {
     user.action = text;
     user.step = 'type';
@@ -68,7 +55,7 @@ if (!sessions[ctx.from.id]) {
     ]).resize());
   }
 
-  // 2. тип
+  // тип
   if (user.step === 'type') {
     user.type = text;
 
@@ -85,7 +72,7 @@ if (!sessions[ctx.from.id]) {
     return ctx.reply('Вкажіть площу (м²)');
   }
 
-  // 3. кімнати
+  // кімнати
   if (user.step === 'rooms') {
     user.rooms = text;
     user.step = 'district';
@@ -93,7 +80,7 @@ if (!sessions[ctx.from.id]) {
     return ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
   }
 
-  // 3. площа
+  // площа
   if (user.step === 'area') {
     user.area = text;
     user.step = 'district';
@@ -101,7 +88,7 @@ if (!sessions[ctx.from.id]) {
     return ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
   }
 
-  // 4. район
+  // район
   if (user.step === 'district') {
     user.district = text;
     user.step = 'price';
@@ -113,7 +100,7 @@ if (!sessions[ctx.from.id]) {
     }
   }
 
-  // 5. ціна
+  // ціна
   if (user.step === 'price') {
     user.price = text;
     user.step = 'phone';
