@@ -40,12 +40,20 @@ bot.start((ctx) => {
 });
 
 bot.on('text', async (ctx) => {
+
+  if (!sessions[ctx.from.id]) {
+    sessions[ctx.from.id] = { step: 'action' };
+
+    return ctx.reply(
+      '👋 Вітаємо в PROSTO Нерухомість!\n\nДопоможемо швидко та безпечно продати або здати вашу нерухомість.\n\nБажаєте продати чи здати?',
+      Markup.keyboard([
+        ['Продати', 'Здати в оренду']
+      ]).resize()
+    );
+  }
+
   const userId = ctx.from.id;
   const text = ctx.message.text;
-
-  if (!sessions[userId]) {
-    sessions[userId] = { step: 'action' };
-  }
 
   const user = sessions[userId];
 
