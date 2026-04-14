@@ -21,11 +21,18 @@ const districts = [
   ['Дніпровський район (передмістя)']
 ];
 
-// старт
 bot.start((ctx) => {
   sessions[ctx.from.id] = {
     step: 'action'
   };
+
+  ctx.reply(
+    '👋 Вітаємо в PROSTO Нерухомість!\n\nБажаєте продати чи здати в оренду нерухомість?',
+    Markup.keyboard([
+      ['Продати', 'Здати в оренду']
+    ]).resize()
+  );
+});
 
   ctx.reply('Що хочете зробити?', Markup.keyboard([
     ['Продати', 'Здати в оренду']
