@@ -21,7 +21,7 @@ const districts = [
   ['Дніпровський район (передмістя)']
 ];
 
-// старт
+// 🔥 СТАРТ (працює і для реклами)
 bot.start((ctx) => {
   sessions[ctx.from.id] = { step: 'action' };
 
@@ -33,29 +33,35 @@ bot.start((ctx) => {
   );
 });
 
-// основна логіка
+// 🔥 якщо людина просто зайшла і написала щось
 bot.on('text', async (ctx) => {
   const userId = ctx.from.id;
   const text = ctx.message.text;
 
+  // якщо нема сесії — запускаємо як старт
   if (!sessions[userId]) {
-    return ctx.reply('Натисніть /start');
+    sessions[userId] = { step: 'action' };
+
+    return ctx.reply(
+      '👋 Вітаємо в PROSTO Нерухомість!\n\nБажаєте продати чи здати в оренду нерухомість?',
+      Markup.keyboard([
+        ['Продати', 'Здати в оренду']
+      ]).resize()
+    );
   }
 
   const user = sessions[userId];
 
-  // дія
   if (user.step === 'action') {
     user.action = text;
     user.step = 'type';
 
     return ctx.reply('Що саме?', Markup.keyboard([
       ['Квартира', 'Будинок'],
-      ['Земля', 'Комерція']
+      ['Комерція', 'Земля']
     ]).resize());
   }
 
-  // тип
   if (user.step === 'type') {
     user.type = text;
 
@@ -72,7 +78,6 @@ bot.on('text', async (ctx) => {
     return ctx.reply('Вкажіть площу (м²)');
   }
 
-  // кімнати
   if (user.step === 'rooms') {
     user.rooms = text;
     user.step = 'district';
@@ -80,7 +85,6 @@ bot.on('text', async (ctx) => {
     return ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
   }
 
-  // площа
   if (user.step === 'area') {
     user.area = text;
     user.step = 'district';
@@ -88,7 +92,6 @@ bot.on('text', async (ctx) => {
     return ctx.reply('Оберіть район', Markup.keyboard(districts).resize());
   }
 
-  // район
   if (user.step === 'district') {
     user.district = text;
     user.step = 'price';
@@ -100,7 +103,6 @@ bot.on('text', async (ctx) => {
     }
   }
 
-  // ціна
   if (user.step === 'price') {
     user.price = text;
     user.step = 'phone';
@@ -114,7 +116,6 @@ bot.on('text', async (ctx) => {
   }
 });
 
-// номер
 bot.on('contact', async (ctx) => {
   const user = sessions[ctx.from.id];
   if (!user) return;
